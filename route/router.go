@@ -8,5 +8,8 @@ func New() *gin.Engine {
 	// 注册路由
 	registerHealthCheck(r)
 
+	// 注册任务路由
+	registerTaskRoutes(r.Group("api"))
+
 	return r
 }
