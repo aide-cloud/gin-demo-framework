@@ -16,7 +16,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	_db = db
+	_db = db.Debug()
 }
 
 func GetDB() *gorm.DB {
