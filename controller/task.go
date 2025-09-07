@@ -1,10 +1,10 @@
 package controller
 
 import (
+	"gin-demo-framework/controller/request"
+	"gin-demo-framework/controller/response"
 	"gin-demo-framework/data"
 	"gin-demo-framework/service"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,92 +15,66 @@ type TaskController struct {
 
 func NewTaskController() *TaskController {
 	return &TaskController{
-		taskService: service.NewTaskService(data.GetDB()),
+		taskService: service.NewTaskService(data.GetDB(), data.GetRDB()),
 	}
 }
 
 func (t *TaskController) List() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var params service.TaskListParams
-		if err := ctx.Bind(&params); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"code": 400,
-				"msg":  err.Error(),
-			})
+		if err := request.Bind(ctx, &params); err != nil {
+			response.ErrorParams(ctx, err)
 			return
 		}
 
-		tasks, total, err := t.taskService.List(ctx, &params)
+		taskListReply, err := t.taskService.List(ctx, &params)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"code": 500,
-				"msg":  err.Error(),
-			})
+			response.ErrorBusiness(ctx, err)
 			return
 		}
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"code":   200,
-			"data":   tasks,
-			"total":  total,
-			"params": params,
-		})
+		response.Success(ctx, taskListReply)
 	}
+}
+
+type TaskDetailParams struct {
+	ID int `form:"id" uri:"id" json:"id"`
 }
 
 func (t *TaskController) Detail() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, exist := ctx.Params.Get("id")
-		if !exist {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"code": 400,
-				"msg":  "id is required",
-			})
+		// panic("test panic")
+		var params TaskDetailParams
+		if err := request.Bind(ctx, &params); err != nil {
+			response.ErrorParams(ctx, err)
 			return
 		}
-		taskID, _ := strconv.Atoi(id)
-		taskDetail, err := t.taskService.Detail(ctx, taskID)
+
+		taskDetail, err := t.taskService.Detail(ctx, params.ID)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"code": 500,
-				"msg":  "internal server error",
-				"err":  err.Error(),
-			})
+			response.ErrorBusiness(ctx, err)
 			return
 		}
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": 200,
-			"data": taskDetail,
-		})
+		response.Success(ctx, taskDetail)
 	}
 }
 
 func (t *TaskController) Create() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": 200,
-			"data": 1,
-		})
+		response.Success(ctx, 1)
 	}
 }
 
 func (t *TaskController) UpdateTask() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": 200,
-			"data": 1,
-		})
+		response.Success(ctx, 1)
 	}
 }
 
 func (t *TaskController) DeleteTask() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": 200,
-			"data": 1,
-		})
+		response.Success(ctx, 1)
 	}
 }
